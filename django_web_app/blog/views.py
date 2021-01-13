@@ -14,7 +14,8 @@ from django.views.generic import (
 )
 from .models import Post,SharingFile
 import operator
-from django.urls import reverse_lazy
+from .forms import CommentForm
+from django.urls import reverse_lazy,reverse
 from django.contrib.staticfiles.views import serve
 from users.models import Profile
 from django.db.models import Q
@@ -89,11 +90,33 @@ class SharedFileView(ListView):
 
 
 
-class PostDetailView(DetailView):
+class PostDetailView(FormMixin,DetailView):
     model = Post
     template_name = 'blog/post_detail.html'
+    form_class=CommentForm
+    
+    def get_success_url(self):
+        return reverse('post-detail', kwargs={'pk': self.object.id})
 
 
+    def get_context_data(self, **kwargs):
+        context = super(PostDetailView, self).get_context_data(**kwargs)
+        context['form'] = CommentForm(initial={'post': self.object})
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def form_valid(self, form):
+        post = Post.objects.get(id=self.object.id)
+        form.instance.post = post
+        form.save()
+        return super(PostDetailView, self).form_valid(form)
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):

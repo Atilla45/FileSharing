@@ -44,5 +44,27 @@
       <h2>{{ object.title }}</h2>
       <p class="article-content">{{ object.content }}</p>
     </div>
+    
   </article>
+  <h2>Comments...</h2>
+  {% if not post.comments.all%}
+    No comments <a href="#">
+      Add one
+    </a>
+    
+  {% else %}
+    {% for comment in post.comments.all%}
+      <strong>{{comment.name}}-{{comment.created_on}}</strong><br>
+      {{comment.body}} <br>
+      
+    {% endfor %}
+    
+
+    
+  {% endif %}
+  <br><br>
+  <form method="POST" class="post-form">{% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="save btn btn-success">Send</button>
+  </form>
 {% endblock content %}
