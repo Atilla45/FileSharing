@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User
 from django.views.generic.edit import FormMixin
 from django.views.generic import (
@@ -97,14 +98,18 @@ class PostDetailView(FormMixin,DetailView):
     
     def get_success_url(self):
         return reverse('post-detail', kwargs={'pk': self.object.id})
-
-
+    
     def get_context_data(self, **kwargs):
         context = super(PostDetailView, self).get_context_data(**kwargs)
         context['form'] = CommentForm(initial={'post': self.object})
+        
         return context
 
+
+    
+        
     def post(self, request, *args, **kwargs):
+        
         self.object = self.get_object()
         form = self.get_form()
         if form.is_valid():
@@ -115,6 +120,7 @@ class PostDetailView(FormMixin,DetailView):
     def form_valid(self, form):
         post = Post.objects.get(id=self.object.id)
         form.instance.post = post
+        
         form.save()
         return super(PostDetailView, self).form_valid(form)
 
